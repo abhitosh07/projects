@@ -1,0 +1,705 @@
+{
+	"info": {
+		"_postman_id": "springboot-crud-collection",
+		"name": "Spring Boot CRUD - Product API",
+		"description": "Complete Postman collection for the Spring Boot CRUD REST API with JPA Repository.\n\nBase URL: http://localhost:8080\n\nEndpoints covered:\n- Create Product (POST)\n- Get All Products (GET)\n- Get Product by ID (GET)\n- Update Product (PUT)\n- Delete Product (DELETE)\n- Filter by Category (GET)\n- Search by Name (GET)\n- Filter by Price Range (GET)",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080",
+			"type": "string"
+		},
+		{
+			"key": "productId",
+			"value": "1",
+			"type": "string",
+			"description": "Dynamic product ID — updated automatically after Create Product"
+		}
+	],
+	"item": [
+		{
+			"name": "Products",
+			"item": [
+				{
+					"name": "Create Product",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 201 Created', function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test('Response has id', function () {",
+									"    const json = pm.response.json();",
+									"    pm.expect(json.id).to.be.a('number');",
+									"    pm.collectionVariables.set('productId', json.id);",
+									"    console.log('Created product ID:', json.id);",
+									"});",
+									"",
+									"pm.test('Response has correct name', function () {",
+									"    const json = pm.response.json();",
+									"    pm.expect(json.name).to.eql('iPad Pro 13\"');",
+									"});",
+									"",
+									"pm.test('Response has timestamps', function () {",
+									"    const json = pm.response.json();",
+									"    pm.expect(json.createdAt).to.not.be.null;",
+									"    pm.expect(json.updatedAt).to.not.be.null;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"iPad Pro 13\\\"\",\n    \"description\": \"Apple M4 chip, 16GB RAM, 256GB storage, ProMotion display\",\n    \"price\": 1299.99,\n    \"quantity\": 40,\n    \"category\": \"Electronics\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/products",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "products"]
+						},
+						"description": "Creates a new product. Validates all required fields.\n\n**Required fields:**\n- `name` (2–150 chars)\n- `price` (> 0.00)\n- `quantity` (>= 0)\n\n**Optional fields:**\n- `description` (max 500 chars)\n- `category` (max 100 chars)"
+					},
+					"response": [
+						{
+							"name": "201 - Product Created",
+							"originalRequest": {
+								"method": "POST",
+								"header": [{"key": "Content-Type", "value": "application/json"}],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"name\": \"iPad Pro 13\\\"\",\n    \"description\": \"Apple M4 chip, 16GB RAM, 256GB storage\",\n    \"price\": 1299.99,\n    \"quantity\": 40,\n    \"category\": \"Electronics\"\n}"
+								},
+								"url": {"raw": "{{baseUrl}}/api/products", "host": ["{{baseUrl}}"], "path": ["api","products"]}
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"id\": 6,\n    \"name\": \"iPad Pro 13\\\"\",\n    \"description\": \"Apple M4 chip, 16GB RAM, 256GB storage\",\n    \"price\": 1299.99,\n    \"quantity\": 40,\n    \"category\": \"Electronics\",\n    \"createdAt\": \"2026-06-10T18:40:00\",\n    \"updatedAt\": \"2026-06-10T18:40:00\"\n}"
+						},
+						{
+							"name": "400 - Validation Error",
+							"originalRequest": {
+								"method": "POST",
+								"header": [{"key": "Content-Type", "value": "application/json"}],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"name\": \"\",\n    \"price\": -5\n}"
+								},
+								"url": {"raw": "{{baseUrl}}/api/products", "host": ["{{baseUrl}}"], "path": ["api","products"]}
+							},
+							"status": "Bad Request",
+							"code": 400,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"timestamp\": \"2026-06-10T18:40:00\",\n    \"status\": 400,\n    \"error\": \"Validation Failed\",\n    \"message\": \"One or more fields have invalid values\",\n    \"fieldErrors\": {\n        \"name\": \"Product name is required\",\n        \"price\": \"Price must be greater than 0\",\n        \"quantity\": \"Quantity is required\"\n    }\n}"
+						},
+						{
+							"name": "409 - Duplicate Name",
+							"originalRequest": {
+								"method": "POST",
+								"header": [{"key": "Content-Type", "value": "application/json"}],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"name\": \"MacBook Pro 14\\\"\",\n    \"price\": 1999.99,\n    \"quantity\": 10\n}"
+								},
+								"url": {"raw": "{{baseUrl}}/api/products", "host": ["{{baseUrl}}"], "path": ["api","products"]}
+							},
+							"status": "Conflict",
+							"code": 409,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"timestamp\": \"2026-06-10T18:40:00\",\n    \"status\": 409,\n    \"error\": \"Conflict\",\n    \"message\": \"Product with name 'MacBook Pro 14\\\"' already exists.\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Get All Products",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200 OK', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response is an array', function () {",
+									"    const json = pm.response.json();",
+									"    pm.expect(json).to.be.an('array');",
+									"});",
+									"",
+									"pm.test('Products have required fields', function () {",
+									"    const json = pm.response.json();",
+									"    if (json.length > 0) {",
+									"        pm.expect(json[0]).to.have.property('id');",
+									"        pm.expect(json[0]).to.have.property('name');",
+									"        pm.expect(json[0]).to.have.property('price');",
+									"        pm.expect(json[0]).to.have.property('quantity');",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/products",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "products"]
+						},
+						"description": "Retrieves all products. Returns an empty array if none exist."
+					},
+					"response": [
+						{
+							"name": "200 - All Products",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {"raw": "{{baseUrl}}/api/products", "host": ["{{baseUrl}}"], "path": ["api","products"]}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"body": "[\n    {\n        \"id\": 1,\n        \"name\": \"MacBook Pro 14\\\"\",\n        \"description\": \"Apple M3 Pro chip, 18GB RAM, 512GB SSD\",\n        \"price\": 1999.99,\n        \"quantity\": 25,\n        \"category\": \"Electronics\",\n        \"createdAt\": \"2026-06-10T18:35:05\",\n        \"updatedAt\": \"2026-06-10T18:35:05\"\n    },\n    {\n        \"id\": 2,\n        \"name\": \"Sony WH-1000XM5\",\n        \"description\": \"Industry-leading noise canceling wireless headphones\",\n        \"price\": 349.99,\n        \"quantity\": 50,\n        \"category\": \"Electronics\",\n        \"createdAt\": \"2026-06-10T18:35:05\",\n        \"updatedAt\": \"2026-06-10T18:35:05\"\n    }\n]"
+						}
+					]
+				},
+				{
+					"name": "Get Product by ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200 OK', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response has correct ID', function () {",
+									"    const json = pm.response.json();",
+									"    pm.expect(json.id).to.eql(parseInt(pm.collectionVariables.get('productId')));",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/products/{{productId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "products", "{{productId}}"]
+						},
+						"description": "Retrieves a single product by its ID. Returns 404 if not found."
+					},
+					"response": [
+						{
+							"name": "200 - Product Found",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {"raw": "{{baseUrl}}/api/products/1", "host": ["{{baseUrl}}"], "path": ["api","products","1"]}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"id\": 1,\n    \"name\": \"MacBook Pro 14\\\"\",\n    \"description\": \"Apple M3 Pro chip, 18GB RAM, 512GB SSD\",\n    \"price\": 1999.99,\n    \"quantity\": 25,\n    \"category\": \"Electronics\",\n    \"createdAt\": \"2026-06-10T18:35:05\",\n    \"updatedAt\": \"2026-06-10T18:35:05\"\n}"
+						},
+						{
+							"name": "404 - Product Not Found",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {"raw": "{{baseUrl}}/api/products/999", "host": ["{{baseUrl}}"], "path": ["api","products","999"]}
+							},
+							"status": "Not Found",
+							"code": 404,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"timestamp\": \"2026-06-10T18:40:00\",\n    \"status\": 404,\n    \"error\": \"Resource Not Found\",\n    \"message\": \"Product not found with id: '999'\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Update Product",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200 OK', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Product was updated', function () {",
+									"    const json = pm.response.json();",
+									"    pm.expect(json.name).to.eql('iPad Pro 13\" - Updated');",
+									"    pm.expect(json.price).to.eql(1199.99);",
+									"});",
+									"",
+									"pm.test('updatedAt changed', function () {",
+									"    const json = pm.response.json();",
+									"    pm.expect(json.updatedAt).to.not.be.null;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"iPad Pro 13\\\" - Updated\",\n    \"description\": \"Apple M4 chip, 16GB RAM, 512GB storage — updated specs\",\n    \"price\": 1199.99,\n    \"quantity\": 35,\n    \"category\": \"Electronics\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/products/{{productId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "products", "{{productId}}"]
+						},
+						"description": "Updates all fields of an existing product. All fields in the request body are required (full update). Returns 404 if not found."
+					},
+					"response": [
+						{
+							"name": "200 - Product Updated",
+							"originalRequest": {
+								"method": "PUT",
+								"header": [{"key": "Content-Type", "value": "application/json"}],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"name\": \"iPad Pro 13\\\" - Updated\",\n    \"description\": \"Updated description\",\n    \"price\": 1199.99,\n    \"quantity\": 35,\n    \"category\": \"Electronics\"\n}"
+								},
+								"url": {"raw": "{{baseUrl}}/api/products/6", "host": ["{{baseUrl}}"], "path": ["api","products","6"]}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"id\": 6,\n    \"name\": \"iPad Pro 13\\\" - Updated\",\n    \"description\": \"Updated description\",\n    \"price\": 1199.99,\n    \"quantity\": 35,\n    \"category\": \"Electronics\",\n    \"createdAt\": \"2026-06-10T18:40:00\",\n    \"updatedAt\": \"2026-06-10T18:41:00\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Delete Product",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 204 No Content', function () {",
+									"    pm.response.to.have.status(204);",
+									"});",
+									"",
+									"pm.test('Response body is empty', function () {",
+									"    pm.expect(pm.response.text()).to.eql('');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/products/{{productId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "products", "{{productId}}"]
+						},
+						"description": "Deletes a product by its ID. Returns 204 No Content on success. Returns 404 if the product does not exist."
+					},
+					"response": [
+						{
+							"name": "204 - Product Deleted",
+							"originalRequest": {
+								"method": "DELETE",
+								"header": [],
+								"url": {"raw": "{{baseUrl}}/api/products/6", "host": ["{{baseUrl}}"], "path": ["api","products","6"]}
+							},
+							"status": "No Content",
+							"code": 204,
+							"_postman_previewlanguage": "text",
+							"body": ""
+						},
+						{
+							"name": "404 - Product Not Found",
+							"originalRequest": {
+								"method": "DELETE",
+								"header": [],
+								"url": {"raw": "{{baseUrl}}/api/products/999", "host": ["{{baseUrl}}"], "path": ["api","products","999"]}
+							},
+							"status": "Not Found",
+							"code": 404,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"timestamp\": \"2026-06-10T18:40:00\",\n    \"status\": 404,\n    \"error\": \"Resource Not Found\",\n    \"message\": \"Product not found with id: '999'\"\n}"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Search & Filter",
+			"item": [
+				{
+					"name": "Filter by Category",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200 OK', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('All results match category', function () {",
+									"    const json = pm.response.json();",
+									"    json.forEach(function(product) {",
+									"        pm.expect(product.category.toLowerCase()).to.eql('electronics');",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/products?category=Electronics",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "products"],
+							"query": [
+								{
+									"key": "category",
+									"value": "Electronics",
+									"description": "Filter products by category (case-insensitive)"
+								}
+							]
+						},
+						"description": "Filters products by category name (case-insensitive).\n\nExample categories in seed data: `Electronics`, `Furniture`, `Books`"
+					},
+					"response": [
+						{
+							"name": "200 - Electronics Products",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {"raw": "{{baseUrl}}/api/products?category=Electronics", "host": ["{{baseUrl}}"], "path": ["api","products"], "query": [{"key": "category", "value": "Electronics"}]}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"body": "[\n    {\n        \"id\": 1,\n        \"name\": \"MacBook Pro 14\\\"\",\n        \"price\": 1999.99,\n        \"quantity\": 25,\n        \"category\": \"Electronics\",\n        \"createdAt\": \"2026-06-10T18:35:05\",\n        \"updatedAt\": \"2026-06-10T18:35:05\"\n    },\n    {\n        \"id\": 2,\n        \"name\": \"Sony WH-1000XM5\",\n        \"price\": 349.99,\n        \"quantity\": 50,\n        \"category\": \"Electronics\",\n        \"createdAt\": \"2026-06-10T18:35:05\",\n        \"updatedAt\": \"2026-06-10T18:35:05\"\n    }\n]"
+						}
+					]
+				},
+				{
+					"name": "Search by Name Keyword",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200 OK', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Results contain search keyword', function () {",
+									"    const json = pm.response.json();",
+									"    json.forEach(function(product) {",
+									"        pm.expect(product.name.toLowerCase()).to.include('pro');",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/products?search=pro",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "products"],
+							"query": [
+								{
+									"key": "search",
+									"value": "pro",
+									"description": "Search keyword — matches products whose name contains this string (case-insensitive)"
+								}
+							]
+						},
+						"description": "Searches products by name keyword (case-insensitive, partial match).\n\nE.g. `search=pro` matches \"MacBook **Pro**\", \"iPad **Pro**\", etc."
+					},
+					"response": [
+						{
+							"name": "200 - Search Results",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {"raw": "{{baseUrl}}/api/products?search=pro", "host": ["{{baseUrl}}"], "path": ["api","products"], "query": [{"key":"search","value":"pro"}]}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"body": "[\n    {\n        \"id\": 1,\n        \"name\": \"MacBook Pro 14\\\"\",\n        \"price\": 1999.99,\n        \"quantity\": 25,\n        \"category\": \"Electronics\",\n        \"createdAt\": \"2026-06-10T18:35:05\",\n        \"updatedAt\": \"2026-06-10T18:35:05\"\n    }\n]"
+						}
+					]
+				},
+				{
+					"name": "Filter by Price Range",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200 OK', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('All results are within price range', function () {",
+									"    const json = pm.response.json();",
+									"    json.forEach(function(product) {",
+									"        pm.expect(product.price).to.be.at.least(100);",
+									"        pm.expect(product.price).to.be.at.most(500);",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/products?minPrice=100&maxPrice=500",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "products"],
+							"query": [
+								{
+									"key": "minPrice",
+									"value": "100",
+									"description": "Minimum price (inclusive)"
+								},
+								{
+									"key": "maxPrice",
+									"value": "500",
+									"description": "Maximum price (inclusive)"
+								}
+							]
+						},
+						"description": "Filters products within a price range using JPQL query.\n\nBoth `minPrice` and `maxPrice` must be provided together."
+					},
+					"response": [
+						{
+							"name": "200 - Price Range Results",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {"raw": "{{baseUrl}}/api/products?minPrice=100&maxPrice=500", "host": ["{{baseUrl}}"], "path": ["api","products"], "query": [{"key":"minPrice","value":"100"},{"key":"maxPrice","value":"500"}]}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"body": "[\n    {\n        \"id\": 2,\n        \"name\": \"Sony WH-1000XM5\",\n        \"price\": 349.99,\n        \"quantity\": 50,\n        \"category\": \"Electronics\",\n        \"createdAt\": \"2026-06-10T18:35:05\",\n        \"updatedAt\": \"2026-06-10T18:35:05\"\n    },\n    {\n        \"id\": 3,\n        \"name\": \"Ergonomic Office Chair\",\n        \"price\": 459.00,\n        \"quantity\": 15,\n        \"category\": \"Furniture\",\n        \"createdAt\": \"2026-06-10T18:35:05\",\n        \"updatedAt\": \"2026-06-10T18:35:05\"\n    }\n]"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Validation Edge Cases",
+			"item": [
+				{
+					"name": "Create - Missing Required Fields",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 400 Bad Request', function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test('Response has fieldErrors', function () {",
+									"    const json = pm.response.json();",
+									"    pm.expect(json.fieldErrors).to.be.an('object');",
+									"    pm.expect(Object.keys(json.fieldErrors).length).to.be.greaterThan(0);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"\",\n    \"price\": -10,\n    \"quantity\": -5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/products",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "products"]
+						},
+						"description": "Tests validation: empty name, negative price, negative quantity — all should fail with 400 and field-level error details."
+					},
+					"response": []
+				},
+				{
+					"name": "Get - Non-Existent ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 404 Not Found', function () {",
+									"    pm.response.to.have.status(404);",
+									"});",
+									"",
+									"pm.test('Response has error message', function () {",
+									"    const json = pm.response.json();",
+									"    pm.expect(json.error).to.eql('Resource Not Found');",
+									"    pm.expect(json.message).to.include('999');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/products/999",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "products", "999"]
+						},
+						"description": "Tests 404 response for a product ID that doesn't exist."
+					},
+					"response": []
+				},
+				{
+					"name": "Create - Duplicate Name",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 409 Conflict', function () {",
+									"    pm.response.to.have.status(409);",
+									"});",
+									"",
+									"pm.test('Response mentions conflict', function () {",
+									"    const json = pm.response.json();",
+									"    pm.expect(json.error).to.eql('Conflict');",
+									"    pm.expect(json.message).to.include('already exists');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"MacBook Pro 14\\\"\",\n    \"description\": \"Duplicate name test\",\n    \"price\": 999.99,\n    \"quantity\": 10,\n    \"category\": \"Electronics\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/products",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "products"]
+						},
+						"description": "Tests 409 Conflict when trying to create a product with a name that already exists (e.g., 'MacBook Pro 14\"' is seeded on startup)."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete - Non-Existent ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 404 Not Found', function () {",
+									"    pm.response.to.have.status(404);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/products/9999",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "products", "9999"]
+						},
+						"description": "Tests 404 when attempting to delete a product that doesn't exist."
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
